@@ -4,6 +4,94 @@ from screeninfo import get_monitors
 from tkinter import ttk
 
 root = tk.Tk()
+import tkinter as tk
+import mysql.connector
+from screeninfo import get_monitors
+from tkinter import ttk
+
+# ...
+
+def create_table():
+    mydb = mysql.connector.connect(
+        host="localhost",
+        port=3306,
+        user="root",
+        password="krawik",
+        database="studentsdb"
+    )
+    mycursor = mydb.cursor()
+
+    # Sprawdzenie istnienia tabeli
+    table_exists = False
+    mycursor.execute("SHOW TABLES LIKE 'student'")
+    result = mycursor.fetchone()
+    if result:
+        table_exists = True
+
+    # Tworzenie tabeli tylko wtedy, gdy nie istnieje
+    if not table_exists:
+        sql = """
+            CREATE TABLE `student` (
+              `id` int NOT NULL AUTO_INCREMENT,
+              `name` varchar(45) DEFAULT NULL,
+              `surname` varchar(45) DEFAULT NULL,
+              `year` varchar(45) DEFAULT NULL,
+              `major` varchar(45) DEFAULT NULL,
+              PRIMARY KEY (`id`)
+            ) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+        """
+        mycursor.execute(sql)
+        mydb.commit()
+        print("Table 'student' created successfully.")
+    else:
+        print("Table 'student' already exists.")
+
+    mycursor.close()
+    mydb.close()
+
+# ...
+def insert_student(name, surname, year, major):
+    mydb = mysql.connector.connect(
+        host="localhost",
+        port=3306,
+        user="root",
+        password="krawik",
+        database="studentsdb"
+    )
+    mycursor = mydb.cursor()
+    insert_query = """
+    INSERT INTO student (name, surname, year, major)
+    VALUES (%s, %s, %s, %s)
+    """
+    students_data = [
+        (name, surname, year, major),
+    ]
+    for student in students_data:
+        mycursor.execute(insert_query, student)
+
+    result = mycursor.fetchall()
+    mydb.commit()
+    mycursor.close()
+    mydb.close()
+    return result
+# Call create_table() function before inserting data
+create_table()
+
+insert_student("John", "Doe", "2023", "Computer Science")
+insert_student("Jane", "Smith", "2022", "Psychology")
+insert_student("Michael", "Johnson", "2024", "Business Administration")
+insert_student("Emily", "Williams", "2023", "Art History")
+insert_student("David", "Brown", "2022", "Engineering")
+
+# ...
+
+
+def load_data():
+    data = fetch_data()
+    treeview.delete(*treeview.get_children())
+    for row in data:
+        treeview.insert("", "end", values=row)
+
 
 root.title("Students tool")
 screen_width = get_monitors()[0].width
@@ -39,6 +127,7 @@ majorCombobox.pack(anchor="center", padx=10, pady=10)
 resultLabel = tk.Label(root, text="")
 resultLabel.pack()
 
+
 def change_text():
     name = nameEntry.get()
     resultLabel.config(text=name + " has been added.")
@@ -54,30 +143,13 @@ def add_student():
     resultLabel.config(text=f"{name} has been added.")
 
 
-def insert_student(name, surname, year, major):
-    mydb = mysql.connector.connect(
-        host="localhost",
-        port=3306,
-        user="root",
-        password="krawik",
-        database="studentsdb"
-    )
-    mycursor = mydb.cursor()
-    insert_query = """
-    INSERT INTO student (name, surname, year, major)
-    VALUES (%s, %s, %s, %s)
-    """
-    students_data = [
-        (name, surname, year, major),
-    ]
-    for student in students_data:
-        mycursor.execute(insert_query, student)
 
-    result = mycursor.fetchall()
-    mydb.commit()
-    mycursor.close()
-    mydb.close()
-    return result
+
+
+
+
+
+
 
 
 def fetch_data():
@@ -96,6 +168,7 @@ def fetch_data():
     return result
 
 
+
 addButton = tk.Button(left_frame, text="Add Student", command=add_student)
 addButton.pack(anchor="center", padx=10, pady=10)
 
@@ -110,11 +183,7 @@ treeview.heading("Major", text="Kierunek")
 treeview.pack()
 
 
-def load_data():
-    data = fetch_data()
-    treeview.delete(*treeview.get_children())
-    for row in data:
-        treeview.insert("", "end", values=row)
+
 
 
 load_data()
@@ -170,7 +239,8 @@ def open_details_window(event):
         delete_button.pack()
 
         update_button = tk.Button(details_window, text="Edytuj",
-                                  command=lambda:update_data(item_values[0], name_entry.get(), surname_entry.get(), year_entry.get(), major_entry.get()))
+                                  command=lambda: update_data(item_values[0], name_entry.get(), surname_entry.get(),
+                                                              year_entry.get(), major_entry.get()))
         update_button.pack()
 
 
